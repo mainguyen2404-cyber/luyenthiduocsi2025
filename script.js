@@ -2,15 +2,15 @@ fetch('questions.json')
 .then(res => res.json())
 .then(data => {
 
-  // Lấy ngẫu nhiên 30 câu từ ngân hàng
-  function shuffle(array) {
-    return array.sort(() => Math.random() - 0.5);
+  // Hàm trộn ngẫu nhiên
+  function shuffle(arr) {
+    return arr.sort(() => Math.random() - 0.5);
   }
 
-  const LIMIT = 30;
+  const LIMIT = 30; // hiển thị 30 câu
   const questions = shuffle(data).slice(0, LIMIT);
 
-  // Đếm ngược 10 phút (600 giây)
+  // Đồng hồ đếm ngược 10 phút
   let timeLeft = 600;
   let timer = setInterval(() => {
     let m = Math.floor(timeLeft / 60);
@@ -25,35 +25,53 @@ fetch('questions.json')
     timeLeft--;
   }, 1000);
 
-  // Hiển thị câu hỏi
+  // Hiển thị câu hỏi + trộn đáp án
   const quiz = document.getElementById("quiz");
   questions.forEach((q, i) => {
+    
+    // Gom đáp án vào mảng
+    let options = [
+      { key: "A", text: q.A },
+      { key: "B", text: q.B },
+      { key: "C", text: q.C },
+      { key: "D", text: q.D }
+    ];
+
+    // Trộn đáp án
+    options = shuffle(options);
+
+    // Xác định đáp án đúng sau khi trộn
+    let correctOption = options.find(op => op.key === q.answer).key;
+
+    // Lưu lại đáp án đúng mới vào câu hỏi
+    q.correct = correctOption;
+
     quiz.innerHTML += `
       <div class="question">
         <p><b>Câu ${i+1}:</b> ${q.question}</p>
-        <label><input type="radio" name="q${i}" value="A"> A: ${q.A}</label><br>
-        <label><input type="radio" name="q${i}" value="B"> B: ${q.B}</label><br>
-        <label><input type="radio" name="q${i}" value="C"> C: ${q.C}</label><br>
-        <label><input type="radio" name="q${i}" value="D"> D: ${q.D}</label><br>
+        ${options.map(op => `
+          <label><input type="radio" name="q${i}" value="${op.key}"> ${op.key}: ${op.text}</label><br>
+        `).join('')}
       </div>
     `;
   });
 
-  // Tính điểm
+  // Nút nộp bài
   document.getElementById("submit").onclick = submitQuiz;
 
   function submitQuiz() {
-    clearInterval(timer); // dừng đồng hồ
+    clearInterval(timer);
     let score = 0;
 
     questions.forEach((q, i) => {
       let selected = document.querySelector(`input[name="q${i}"]:checked`);
-      if (selected && selected.value == q.answer) {
+      if (selected && selected.value == q.correct) {
         score++;
       }
     });
 
-    document.getElementById("result").innerHTML = `✅ Kết quả: <span style="color:blue">${score}/${questions.length}</span>`;
+    document.getElementById("result").innerHTML =
+      `✅ Kết quả: <span style="color:blue">${score}/${questions.length}</span>`;
   }
 
 });
