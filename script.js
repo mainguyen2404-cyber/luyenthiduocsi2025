@@ -1,78 +1,68 @@
-fetch('questions.json')
-.then(res => res.json())
-.then(data => {
+let questions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let timer;
+let totalTime = 600; // 10 phút = 600 giây
 
-  // Hàm trộn ngẫu nhiên
-  function shuffle(arr) {
-    return arr.sort(() => Math.random() - 0.5);
-  }
+async function loadQuestions() {
+    const response = await fetch('questions.json');
+    questions = await response.json();
 
-  const LIMIT = 30; // hiển thị 30 câu
-  const questions = shuffle(data).slice(0, LIMIT);
+    // Giới hạn cố định 30 câu đầu
+    questions = questions.slice(0, 30);
 
-  // Đồng hồ đếm ngược 10 phút
-  let timeLeft = 600;
-  let timer = setInterval(() => {
-    let m = Math.floor(timeLeft / 60);
-    let s = timeLeft % 60;
-    s = s < 10 ? "0" + s : s;
-    document.getElementById("timer").innerText = `${m}:${s}`;
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      submitQuiz();
-      alert("⏰ Hết giờ! Bài thi đã được nộp.");
+    startTimer();
+    showQuestion();
+}
+
+function startTimer() {
+    timer = setInterval(() => {
+        totalTime--;
+        document.getElementById("timer").innerText = formatTime(totalTime);
+
+        if (totalTime <= 0) {
+            clearInterval(timer);
+            endQuiz();
+        }
+    }, 1000);
+}
+
+function formatTime(seconds) {
+    let m = Math.floor(seconds / 60);
+    let s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function showQuestion() {
+    const q = questions[currentQuestionIndex];
+    document.getElementById("question").innerText = `Câu ${currentQuestionIndex + 1}: ${q.question}`;
+
+    document.getElementById("answerA").innerText = q.A;
+    document.getElementById("answerB").innerText = q.B;
+    document.getElementById("answerC").innerText = q.C;
+    document.getElementById("answerD").innerText = q.D;
+}
+
+function selectAnswer(option) {
+    const correct = questions[currentQuestionIndex].answer.trim().toUpperCase();
+    if (option === correct) score++;
+
+    currentQuestionIndex++;
+    if (currentQuestionIndex < questions.length) {
+        showQuestion();
+    } else {
+        endQuiz();
     }
-    timeLeft--;
-  }, 1000);
+}
 
-  // Hiển thị câu hỏi + trộn đáp án
-  const quiz = document.getElementById("quiz");
-  questions.forEach((q, i) => {
-    
-    // Gom đáp án vào mảng
-    let options = [
-      { key: "A", text: q.A },
-      { key: "B", text: q.B },
-      { key: "C", text: q.C },
-      { key: "D", text: q.D }
-    ];
-
-    // Trộn đáp án
-    options = shuffle(options);
-
-    // Xác định đáp án đúng sau khi trộn
-    let correctOption = options.find(op => op.key === q.answer).key;
-
-    // Lưu lại đáp án đúng mới vào câu hỏi
-    q.correct = correctOption;
-
-    quiz.innerHTML += `
-      <div class="question">
-        <p><b>Câu ${i+1}:</b> ${q.question}</p>
-        ${options.map(op => `
-          <label><input type="radio" name="q${i}" value="${op.key}"> ${op.key}: ${op.text}</label><br>
-        `).join('')}
-      </div>
-    `;
-  });
-
-  // Nút nộp bài
-  document.getElementById("submit").onclick = submitQuiz;
-
-  function submitQuiz() {
+function endQuiz() {
     clearInterval(timer);
-    let score = 0;
+    document.getElementById("quiz").style.display = "none";
+    document.getElementById("result").style.display = "block";
 
-    questions.forEach((q, i) => {
-      let selected = document.querySelector(`input[name="q${i}"]:checked`);
-      if (selected && selected.value == q.correct) {
-        score++;
-      }
-    });
+    document.getElementById("score").innerText =
+        `Kết quả: ${score}/${questions.length} câu (${Math.round(score/questions.length*100)}%)`;
+}
 
-    document.getElementById("result").innerHTML =
-      `✅ Kết quả: <span style="color:blue">${score}/${questions.length}</span>`;
-  }
-
-});
+loadQuestions();
 
