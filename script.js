@@ -8,7 +8,7 @@ async function loadQuestions() {
     const response = await fetch('questions.json');
     questions = await response.json();
 
-    // Lấy đúng 30 câu đầu
+    // Giới hạn cố định 30 câu đầu
     questions = questions.slice(0, 30);
 
     startTimer();
@@ -37,10 +37,10 @@ function showQuestion() {
     const q = questions[currentQuestionIndex];
     document.getElementById("question").innerText = `Câu ${currentQuestionIndex + 1}: ${q.question}`;
 
-    document.getElementById("answerA").innerText = q.optionA;
-    document.getElementById("answerB").innerText = q.optionB;
-    document.getElementById("answerC").innerText = q.optionC;
-    document.getElementById("answerD").innerText = q.optionD;
+    document.getElementById("answerA").innerText = q.A;
+    document.getElementById("answerB").innerText = q.B;
+    document.getElementById("answerC").innerText = q.C;
+    document.getElementById("answerD").innerText = q.D;
 }
 
 function selectAnswer(option) {
