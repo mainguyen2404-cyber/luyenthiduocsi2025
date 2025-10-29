@@ -1,54 +1,53 @@
 let questions = [];
-let currentQuestionIndex = 0;
+let currentQuestion = 0;
 let score = 0;
-let timer;
-let totalTime = 600; // 10 phút = 600 giây
+let timeLeft = 600; // 10 phút
 
 async function loadQuestions() {
-    const response = await fetch('questions.json');
-    questions = await response.json();
+    const res = await fetch("questions.json");
+    questions = await res.json();
 
-    // Giới hạn cố định 30 câu đầu
+    // Giới hạn 30 câu
     questions = questions.slice(0, 30);
 
-    startTimer();
     showQuestion();
+    startTimer();
 }
 
 function startTimer() {
-    timer = setInterval(() => {
-        totalTime--;
-        document.getElementById("timer").innerText = formatTime(totalTime);
+    const timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = formatTime(timeLeft);
 
-        if (totalTime <= 0) {
+        if (timeLeft <= 0) {
             clearInterval(timer);
             endQuiz();
         }
     }, 1000);
 }
 
-function formatTime(seconds) {
-    let m = Math.floor(seconds / 60);
-    let s = seconds % 60;
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
 }
 
 function showQuestion() {
-    const q = questions[currentQuestionIndex];
-    document.getElementById("question").innerText = `Câu ${currentQuestionIndex + 1}: ${q.question}`;
+    const q = questions[currentQuestion];
+    document.getElementById("question").innerText = `Câu ${currentQuestion + 1}: ${q.question}`;
 
-    document.getElementById("answerA").innerText = q.A;
-    document.getElementById("answerB").innerText = q.B;
-    document.getElementById("answerC").innerText = q.C;
-    document.getElementById("answerD").innerText = q.D;
+    document.getElementById("answerA").innerText = q.optionA;
+    document.getElementById("answerB").innerText = q.optionB;
+    document.getElementById("answerC").innerText = q.optionC;
+    document.getElementById("answerD").innerText = q.optionD;
 }
 
-function selectAnswer(option) {
-    const correct = questions[currentQuestionIndex].answer.trim().toUpperCase();
-    if (option === correct) score++;
+function chooseAnswer(choice) {
+    const correct = questions[currentQuestion].answer.trim().toUpperCase();
+    if (choice === correct) score++;
 
-    currentQuestionIndex++;
-    if (currentQuestionIndex < questions.length) {
+    currentQuestion++;
+    if (currentQuestion < questions.length) {
         showQuestion();
     } else {
         endQuiz();
@@ -56,12 +55,10 @@ function selectAnswer(option) {
 }
 
 function endQuiz() {
-    clearInterval(timer);
     document.getElementById("quiz").style.display = "none";
     document.getElementById("result").style.display = "block";
-
     document.getElementById("score").innerText =
-        `Kết quả: ${score}/${questions.length} câu (${Math.round(score/questions.length*100)}%)`;
+        `Bạn đúng ${score}/${questions.length} câu (${Math.round(score/questions.length * 100)}%)`;
 }
 
 loadQuestions();
